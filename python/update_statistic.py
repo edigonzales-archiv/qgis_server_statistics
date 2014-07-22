@@ -14,18 +14,18 @@ db_params['db_owner'] =  'stefan'
 db_params['db_pwd'] =  'ziegler12'
 db_params['db_user'] =  'mspublic'
 
-#blacklist = {}
+blacklist = {}
 #blacklist['map'] = ['strassenkarte',  'grundbuchplan']
-#blacklist['ip'] = ...
+blacklist['ip'] = ['193.135.67.105/32', '144.76.82.106/32']
 #blacklist['referer'] = ...
 # -> something like WHERE map NOT IN [..., ..., ...] etc. etc.
 
 
 try:
     statistics = QgsServerStatistics(db_params)
-    statistics.init_database()
-    
-    
+    #statistics.create_sql("/home/stefan/tmp/statistics.sql")
+    statistics.update_database('/home/stefan/Projekte/qgis_server_statistics/data/catais/access.log', 'Europe/Amsterdam')
+#    statistics.export_json('/home/stefan/Projekte/qgis_server_statistics/html/', blacklist)
     
     
     

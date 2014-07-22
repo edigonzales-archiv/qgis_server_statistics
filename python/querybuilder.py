@@ -2,8 +2,8 @@
 # -*- coding: UTF-8 -*-
 
 """
-Name                    : QgsServerStatistics
-Description             : Parses an apache access log file and save OWS requests in PostgreSQL database. Creates nvd3 charts.
+Name                    : QueryBuilder
+Description             : fubar.
 Date                    : 19/July/2014 
 copyright               : (C) 2014 by Stefan Ziegler
 email                   : stefan.ziegler.de (at) gmail.com
@@ -23,20 +23,8 @@ import sys
 import os
 import psycopg2
 import re
-import datetime
-import urlparse
-import pytz
 
-from pytz import timezone
-from collections import defaultdict, namedtuple
-from querybuilder import QueryBuilder
-
-#######
-#### TROTZDEM hier loggen.
-## eventuell log dir setzen, falls nicht gesetzt -> standard directory.
-#######
-
-class QgsServerStatistics:
+class QueryBuilder:
     def __init__(self, db_params):
         self.db_host = db_params['db_host']
         self.db_name = db_params['db_name']
@@ -72,9 +60,7 @@ class QgsServerStatistics:
         finally:
             if con:
                 con.close()
-        
-        # Export json for total requests
-        # and every single map.
+                
         if maps:
             print "mache total"
             

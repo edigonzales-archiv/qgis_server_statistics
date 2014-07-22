@@ -59,7 +59,7 @@ pattern = re.compile(
 # Testen, ob noch alles funktioniert. 
 # Grund für den Wechsel "with time zone" war PostgreSQL.
 # Da gab das Hin- und Herrechnen mit EPOCH komische Resultate.
-amsterdam = timezone('Europe/Amsterdam')
+mytimezone = timezone('Europe/Amsterdam')
 
 con = None
 
@@ -75,7 +75,7 @@ try:
     # figure out max date from database
     if res[0] == None:
         max_date_naive = datetime.datetime.strptime( "1900-01-01T00:00:00", "%Y-%m-%dT%H:%M:%S" )
-        max_date = amsterdam.localize(max_date_naive)
+        max_date = mytimezone.localize(max_date_naive)
         print max_date
     else:
         max_date = res[0]
@@ -92,7 +92,7 @@ try:
                 res = match.groupdict()
 #                print res["time"]
                 request_date_naive = datetime.datetime.strptime( res["time"].split( " " )[0], "%d/%b/%Y:%H:%M:%S" )
-                request_date = amsterdam.localize(request_date_naive)
+                request_date = mytimezone.localize(request_date_naive)
 
                 #print request_date
                 if request_date > max_date:

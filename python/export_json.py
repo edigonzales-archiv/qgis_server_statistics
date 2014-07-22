@@ -16,23 +16,83 @@ DBPWD = "ziegler12"
 
 OUT_DIR = '/home/stefan/Projekte/qgis_server_statistics/html/'
 
-sql_daily = """SELECT EXTRACT(EPOCH FROM t1.cumulative_datetime) * 1000::integer as cumulative_datetime, coalesce(t2.count, 0) as count
---FROM generate_series(NOW() - '1 day'::INTERVAL, NOW(), '15min') AS t1(cumulative_datetime)
-FROM generate_series('2014-07-15 14:00:00'::timestamp,'2014-07-16 14:00:00'::timestamp, '15min') AS t1(cumulative_datetime)
-LEFT OUTER JOIN 
+sql_day = """
+SELECT t1.my_datetime * 60 * 1000, coalesce(t2.count, 0) as count
+FROM
 (
- SELECT count(*), round(extract('epoch' from request_date) / 900),  timestamp with time zone 'epoch' + round(extract('epoch' from request_date) / 900) * 900 * INTERVAL '1 second' as cumulative_datetime
+ SELECT round(EXTRACT(EPOCH FROM t1.cumulative_datetime) / 60) as my_datetime
+ FROM generate_series(NOW() - '1 day'::INTERVAL, NOW(), '60sec') AS t1(cumulative_datetime)
+) as t1
+LEFT OUTER JOIN
+(
+ SELECT count(*) as count, round(extract('epoch' from request_date) / 60) as my_datetime, timestamp with time zone 'epoch' + round(extract('epoch' from request_date) / 60) * 60 * INTERVAL '1 second' as cumulative_datetime
  FROM sogis_ows_statistics.wms_requests
--- Das geht wirklich nur mit NOW().
---WHERE request_date >= NOW() - '1 day'::INTERVAL
--- Zum testen:
- WHERE request_date >= '2014-07-15 14:00:00'::timestamp 
- AND request_date <= '2014-07-16 14:00:00'::timestamp 
- GROUP BY round(extract('epoch' from request_date) / 900)
- ORDER BY round(extract('epoch' from request_date) / 900)
-) AS t2
-ON  t1.cumulative_datetime =  t2.cumulative_datetime
-ORDER BY t1.cumulative_datetime;
+ WHERE request_date >= NOW() - '1 day'::INTERVAL
+ GROUP BY round(extract('epoch' from request_date) / 60)
+ ORDER BY round(extract('epoch' from request_date) / 60)
+) as t2
+ON t1.my_datetime = t2.my_datetime
+ORDER BY t1.my_datetime;
+"""
+
+sql_week = """
+SELECT t1.my_datetime * 60 * 1000, coalesce(t2.count, 0) as count
+FROM
+(
+ SELECT round(EXTRACT(EPOCH FROM t1.cumulative_datetime) / 60) as my_datetime
+ FROM generate_series(NOW() - '1 week'::INTERVAL, NOW(), '60sec') AS t1(cumulative_datetime)
+) as t1
+LEFT OUTER JOIN
+(
+ SELECT count(*) as count, round(extract('epoch' from request_date) / 60) as my_datetime, timestamp with time zone 'epoch' + round(extract('epoch' from request_date) / 60) * 60 * INTERVAL '1 second' as cumulative_datetime
+ FROM sogis_ows_statistics.wms_requests
+ WHERE request_date >= NOW() - '1 week'::INTERVAL
+ GROUP BY round(extract('epoch' from request_date) / 60)
+ ORDER BY round(extract('epoch' from request_date) / 60)
+) as t2
+ON t1.my_datetime = t2.my_datetime
+ORDER BY t1.my_datetime;
+"""
+
+# 1800 sek / 30 = 60 sek. 
+# Weniger Punkte aber trotzdem 'pro Minute' (entspricht dann halt dem Durchschnitt in diesen 1800 sekunden)
+sql_month = """
+SELECT t1.my_datetime * 1800 * 1000, coalesce(t2.count / 30, 0) as count
+FROM
+(
+ SELECT round(EXTRACT(EPOCH FROM t1.cumulative_datetime) / 1800) as my_datetime
+ FROM generate_series(NOW() - '1 month'::INTERVAL, NOW(), '1800sec') AS t1(cumulative_datetime)
+) as t1
+LEFT OUTER JOIN
+(
+ SELECT count(*) as count, round(extract('epoch' from request_date) / 1800) as my_datetime, timestamp with time zone 'epoch' + round(extract('epoch' from request_date) / 1800) * 1800 * INTERVAL '1 second' as cumulative_datetime
+ FROM sogis_ows_statistics.wms_requests
+ WHERE request_date >= NOW() - '1 month'::INTERVAL
+ GROUP BY round(extract('epoch' from request_date) / 1800)
+ ORDER BY round(extract('epoch' from request_date) / 1800)
+) as t2
+ON t1.my_datetime = t2.my_datetime
+ORDER BY t1.my_datetime;
+"""
+
+# count / 120 -> dann erhält man den Durchnitt in den zwei Stunden?????
+sql_year = """
+SELECT t1.my_datetime * 7200 * 1000, coalesce(t2.count / 120, 0) as count 
+FROM
+(
+ SELECT round(EXTRACT(EPOCH FROM t1.cumulative_datetime) / 7200) as my_datetime
+ FROM generate_series(NOW() - '1 year'::INTERVAL, NOW(), '7200sec') AS t1(cumulative_datetime)
+) as t1
+LEFT OUTER JOIN
+(
+ SELECT count(*) as count, round(extract('epoch' from request_date) / 7200) as my_datetime, timestamp with time zone 'epoch' + round(extract('epoch' from request_date) / 7200) * 7200 * INTERVAL '1 second' as cumulative_datetime
+ FROM sogis_ows_statistics.wms_requests
+ WHERE request_date >= NOW() - '1 year'::INTERVAL
+ GROUP BY round(extract('epoch' from request_date) / 7200)
+ ORDER BY round(extract('epoch' from request_date) / 7200)
+) as t2
+ON t1.my_datetime = t2.my_datetime
+ORDER BY t1.my_datetime;
 """
 
 try:
@@ -41,7 +101,7 @@ try:
     con = psycopg2.connect( con_string )
     
     cur = con.cursor()
-    cur.execute(sql_daily)
+    cur.execute(sql_year)
     rows = cur.fetchall()
 
     rowarray_list = []
@@ -56,7 +116,7 @@ try:
     chart_list = []
     
     d = collections.OrderedDict()
-    d['key'] =  "Total / 15min"
+    d['key'] =  "Total / min"
     d['color'] = "#3182bd"
     d['area'] = True
     d['values'] = rowarray_list
