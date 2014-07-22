@@ -1,4 +1,4 @@
-﻿
+﻿SELECT DISTINCT ON (map) map FROM sogis_ows_statistics.wms_requests
 
 
 
