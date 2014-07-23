@@ -26,15 +26,18 @@ import re
 import datetime
 import urlparse
 import pytz
+import collections
 
 from pytz import timezone
 from collections import defaultdict, namedtuple
 from querybuilder import QueryBuilder
+from os.path import join
+from json import dumps
 
-#######
-#### TROTZDEM hier loggen.
-## eventuell log dir setzen, falls nicht gesetzt -> standard directory.
-#######
+'''
+Use some logging!
+.setLogfile("path"): sets logfile path. Use some default value. Script directory?
+'''
 
 class QgsServerStatistics:
     def __init__(self, db_params):
@@ -51,7 +54,7 @@ class QgsServerStatistics:
                 
         self.con_string = "host='" + self.db_host + "' dbname='" + self.db_name + "' user='" + self.db_owner + "' password='" + self.db_pwd + "'"        
        
-    def export_json(self, out_dir):
+    def export_json(self, out_dir, blacklist):
         # Get all maps that were requested.
         try:
             con = psycopg2.connect(self.con_string)
@@ -62,6 +65,61 @@ class QgsServerStatistics:
         
             maps = cur.fetchall()
         
+        
+            # Export json for total requests
+            # and every single map.
+            if maps:
+                print "mache total"
+                
+                # Day
+                query_builder = QueryBuilder(blacklist)
+                sql = query_builder.get_day("60");
+                cur.execute(sql)
+                rows = cur.fetchall()
+                self.export_data(rows, join(out_dir,  "day_total.json" ), "Total / min",  "#3182bd", True)
+                
+                for map in maps:
+                    sql = query_builder.get_day("60",  str(map[0]));                    
+                    cur.execute(sql)
+                    rows = cur.fetchall()
+                    self.export_data(rows, join(out_dir,  "day_"+str(map[0])+".json" ), "Total / min",  "#3182bd", True)
+                    
+                # Week
+                sql = query_builder.get_week("60");
+                cur.execute(sql)
+                rows = cur.fetchall()
+                self.export_data(rows, join(out_dir,  "week_total.json" ), "Total / min",  "#3182bd", True)
+                
+                for map in maps:
+                    sql = query_builder.get_week("60",  str(map[0]));                    
+                    cur.execute(sql)
+                    rows = cur.fetchall()
+                    self.export_data(rows, join(out_dir,  "week_"+str(map[0])+".json" ), "Total / min",  "#3182bd", True)
+
+               # Month
+                sql = query_builder.get_month("1800");
+                cur.execute(sql)
+                rows = cur.fetchall()
+                self.export_data(rows, join(out_dir,  "month_total.json" ), "Total / min",  "#3182bd", True)
+                
+                for map in maps:
+                    sql = query_builder.get_month("1800",  str(map[0]));                    
+                    cur.execute(sql)
+                    rows = cur.fetchall()
+                    self.export_data(rows, join(out_dir,  "month_"+str(map[0])+".json" ), "Total / min",  "#3182bd", True)
+
+               # Year
+                sql = query_builder.get_year("7200");
+                cur.execute(sql)
+                rows = cur.fetchall()
+                self.export_data(rows, join(out_dir,  "year_total.json" ), "Total / min",  "#3182bd", True)
+                
+                for map in maps:
+                    sql = query_builder.get_year("7200",  str(map[0]));                    
+                    cur.execute(sql)
+                    rows = cur.fetchall()
+                    self.export_data(rows, join(out_dir,  "year_"+str(map[0])+".json" ), "Total / min",  "#3182bd", True)
+
         except psycopg2.Error:
             exc_type, exc_value, exc_traceback = sys.exc_info() 
             print sys.exc_info() 
@@ -72,17 +130,26 @@ class QgsServerStatistics:
         finally:
             if con:
                 con.close()
+
+    def export_data(self, rows, json_file, key, color, area):
+        rowarray_list = []
+        for row in rows:
+            t = (row[0],  row[1])
+            rowarray_list.append(t)
+
+        chart_list = []
         
-        # Export json for total requests
-        # and every single map.
-        if maps:
-            print "mache total"
+        d = collections.OrderedDict()
+        d['key'] =  key
+        d['color'] = color
+        d['area'] = area
+        d['values'] = rowarray_list
             
-            for map in maps:
-                print map[0] + str(" mache die json")
+        chart_list.append(d)
+        
+        with open(json_file, "w") as file:
+            file.write(dumps(chart_list, file, indent=4))
 
-
-      
     def update_database(self, logfile, user_timezone):
         # apache logfile pattern
         pattern = re.compile( 

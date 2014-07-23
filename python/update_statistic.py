@@ -15,25 +15,16 @@ db_params['db_pwd'] =  'ziegler12'
 db_params['db_user'] =  'mspublic'
 
 blacklist = {}
-#blacklist['map'] = ['strassenkarte',  'grundbuchplan']
+blacklist['map'] = ['strassenkarte',  'grundbuchplan']
 blacklist['ip'] = ['193.135.67.105/32', '144.76.82.106/32']
 #blacklist['referer'] = ...
-# -> something like WHERE map NOT IN [..., ..., ...] etc. etc.
+# -> something like WHERE ... ... AND ip NOT IN [..., ..., ...] etc. etc.
+# NOT YET IMPLEMENTED.
 
-
-try:
-    statistics = QgsServerStatistics(db_params)
-    #statistics.create_sql("/home/stefan/tmp/statistics.sql")
-    statistics.update_database('/home/stefan/Projekte/qgis_server_statistics/data/catais/access.log', 'Europe/Amsterdam')
-#    statistics.export_json('/home/stefan/Projekte/qgis_server_statistics/html/', blacklist)
+statistics = QgsServerStatistics(db_params)
+statistics.set_srs("21781")
+#statistics.create_sql("/home/stefan/tmp/statistics.sql")
+#    statistics.update_database('/home/stefan/Projekte/qgis_server_statistics/data/catais/access.log', 'Europe/Amsterdam')
+statistics.export_json('/home/stefan/Projekte/qgis_server_statistics/html/', blacklist)
     
     
-    
-
-except KeyError:
-    exc_type, exc_value, exc_traceback = sys.exc_info() 
-    print sys.exc_info() 
-except Exception:
-    exc_type, exc_value, exc_traceback = sys.exc_info() 
-    print sys.exc_info() 
-
