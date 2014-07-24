@@ -1,35 +1,25 @@
-d3.json("daily.json", function(data) {
-        
-    console.log(data[0]);
-    color = nv.utils.getColor();
-    console.log(color);
-    
-
+d3.json("data/week_total.json", function(data) {
     nv.addGraph(function() {
         var chart = nv.models.lineChart()
                 .interpolate("monotone")  
-                .margin({left: 50, right: 50})    
-                .useInteractiveGuideline(true)
+                .margin({left:80,right:40})    
+                .tooltips(false)
                 .x(function(d) { return d[0] })
                 .y(function(d) { return d[1] });
                 
         chart.xAxis
-            .axisLabel("X-axis Label");
+            .axisLabel("1 week");
 
         chart.yAxis
-            .axisLabel("Y-axis Label")
-            .tickFormat(d3.format("d"))
-            ;
+            .axisLabel("requests / min")
+            .tickFormat(d3.format("d"));
             
         chart.xAxis.tickFormat(function(d) {
-            console.log(d);
             var dx = data[0].values[d] && data[0].values[d][0] || 0;
-        //console.log(data[0].values[d]);
-            //return d3.time.format('%H:%M')(new Date(dx))
-            return d3.time.format('%d.%m %H:%M')(new Date(d));
+            return d3.time.format('%d.%m')(new Date(d));
         });            
 
-        d3.select("svg")
+        d3.select("#chart_week")
             .datum(data)
             .transition().duration(500).call(chart);
 
@@ -40,7 +30,5 @@ d3.json("daily.json", function(data) {
             );
 
         return chart;
-
     });
-    
 });

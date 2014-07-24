@@ -69,56 +69,54 @@ class QgsServerStatistics:
             # Export json for total requests
             # and every single map.
             if maps:
-                print "mache total"
-                
                 # Day
                 query_builder = QueryBuilder(blacklist)
                 sql = query_builder.get_day("60");
                 cur.execute(sql)
                 rows = cur.fetchall()
-                self.export_data(rows, join(out_dir,  "day_total.json" ), "Total / min",  "#3182bd", True)
+                self.export_data(rows, join(out_dir,  "day_total.json" ), "All Maps",  "#3182bd", True)
                 
                 for map in maps:
                     sql = query_builder.get_day("60",  str(map[0]));                    
                     cur.execute(sql)
                     rows = cur.fetchall()
-                    self.export_data(rows, join(out_dir,  "day_"+str(map[0])+".json" ), "Total / min",  "#3182bd", True)
+                    self.export_data(rows, join(out_dir,  "day_"+str(map[0])+".json" ), str(map[0]),  "#3182bd", True)
                     
                 # Week
                 sql = query_builder.get_week("60");
                 cur.execute(sql)
                 rows = cur.fetchall()
-                self.export_data(rows, join(out_dir,  "week_total.json" ), "Total / min",  "#3182bd", True)
+                self.export_data(rows, join(out_dir,  "week_total.json" ), "All Maps",  "#3182bd", True)
                 
                 for map in maps:
                     sql = query_builder.get_week("60",  str(map[0]));                    
                     cur.execute(sql)
                     rows = cur.fetchall()
-                    self.export_data(rows, join(out_dir,  "week_"+str(map[0])+".json" ), "Total / min",  "#3182bd", True)
+                    self.export_data(rows, join(out_dir,  "week_"+str(map[0])+".json" ), str(map[0]),  "#3182bd", True)
 
                # Month
                 sql = query_builder.get_month("1800");
                 cur.execute(sql)
                 rows = cur.fetchall()
-                self.export_data(rows, join(out_dir,  "month_total.json" ), "Total / min",  "#3182bd", True)
+                self.export_data(rows, join(out_dir,  "month_total.json" ), "All Maps",  "#3182bd", True)
                 
                 for map in maps:
                     sql = query_builder.get_month("1800",  str(map[0]));                    
                     cur.execute(sql)
                     rows = cur.fetchall()
-                    self.export_data(rows, join(out_dir,  "month_"+str(map[0])+".json" ), "Total / min",  "#3182bd", True)
+                    self.export_data(rows, join(out_dir,  "month_"+str(map[0])+".json" ), str(map[0]),  "#3182bd", True)
 
                # Year
                 sql = query_builder.get_year("7200");
                 cur.execute(sql)
                 rows = cur.fetchall()
-                self.export_data(rows, join(out_dir,  "year_total.json" ), "Total / min",  "#3182bd", True)
+                self.export_data(rows, join(out_dir,  "year_total.json" ), "All Maps",  "#3182bd", True)
                 
                 for map in maps:
                     sql = query_builder.get_year("7200",  str(map[0]));                    
                     cur.execute(sql)
                     rows = cur.fetchall()
-                    self.export_data(rows, join(out_dir,  "year_"+str(map[0])+".json" ), "Total / min",  "#3182bd", True)
+                    self.export_data(rows, join(out_dir,  "year_"+str(map[0])+".json" ), str(map[0]),  "#3182bd", True)
 
         except psycopg2.Error:
             exc_type, exc_value, exc_traceback = sys.exc_info() 
